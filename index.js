@@ -6,7 +6,7 @@ const denodeify = require('denodeify');
 const fs = require('fs');
 const readFile = denodeify(fs.readFile);
 const realpath = denodeify(fs.realpath);
-const lstats = denodeify(fs.lstats);
+const lstat = denodeify(fs.lstat);
 
 class ContentFunnel extends Funnel {
   constructor(inputNode, options = {}) {
@@ -40,7 +40,7 @@ class ContentFunnel extends Funnel {
             if (item.stats.isSymbolicLink()) {
               return Promise.all([
                 realpath(item.path),
-                lstats(item.path)
+                lstat(item.path)
               ]).then(([path, stats]) => ({ path, stats }));
             }
             return item;
