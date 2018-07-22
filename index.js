@@ -3,7 +3,9 @@
 const Funnel = require('broccoli-funnel');
 const klaw = require('klaw');
 const denodeify = require('denodeify');
-const readFile = denodeify(require('fs').readFile);
+const fs = require('fs');
+const readFile = denodeify(fs.readFile);
+const realpath = denodeify(fs.realpath);
 
 class ContentFunnel extends Funnel {
   constructor(inputNode, options = {}) {
@@ -33,26 +35,29 @@ class ContentFunnel extends Funnel {
       let promises = [];
       klaw(inputPath)
         .on('data', item => {
-          if (item.stats.isDirectory()) {
-            return;
-          }
-          let promise;
-          if (type === 'function') {
-            promise = Promise.resolve(this.options[option](item.path));
-          } else {
-            promise = readFile(item.path, 'utf8').then(source => {
+          promises.push(Promise.resolve().then(() => {
+            if (item.stats.isSymbolicLink()) {
+              return realpath(item.path);
+            }
+            return item.path;
+          }).then(filePath => {
+            if (item.stats.isDirectory()) {
+              return;
+            }
+            if (type === 'function') {
+              return this.options[option](filePath);
+            }
+            return readFile(filePath, 'utf8').then(source => {
               if (type === 'string') {
                 return source.indexOf(this.options[option]) !== -1;
               }
               return this.options[option].test(source);
             });
-          }
-          promise = promise.then(result => {
+          }).then(result => {
             if (result) {
               this[option].push(item.path.substr(inputPath.length + 1));
             }
-          });
-          promises.push(promise);
+          }));
         })
         .on('end', () => {
           resolve(Promise.all(promises));
