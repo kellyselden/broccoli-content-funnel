@@ -22,9 +22,7 @@ class ContentFunnel extends Funnel {
 
   build() {
     let [inputPath] = this.inputPaths;
-    let {
-      callback
-    } = this.options;
+    let { callback } = this.options;
 
     let option = this.options.include ? 'include' : 'exclude';
     let type = typeof this.options[option];
