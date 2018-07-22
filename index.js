@@ -6,6 +6,7 @@ const denodeify = require('denodeify');
 const fs = require('fs');
 const readFile = denodeify(fs.readFile);
 const realpath = denodeify(fs.realpath);
+const lstats = denodeify(fs.lstats);
 
 class ContentFunnel extends Funnel {
   constructor(inputNode, options = {}) {
@@ -37,17 +38,20 @@ class ContentFunnel extends Funnel {
         .on('data', item => {
           promises.push(Promise.resolve().then(() => {
             if (item.stats.isSymbolicLink()) {
-              return realpath(item.path);
+              return Promise.all([
+                realpath(item.path),
+                lstats(item.path)
+              ]).then(([path, stats]) => ({ path, stats }));
             }
-            return item.path;
-          }).then(filePath => {
+            return item;
+          }).then(item => {
             if (item.stats.isDirectory()) {
               return;
             }
             if (type === 'function') {
-              return this.options[option](filePath);
+              return this.options[option](item.path);
             }
-            return readFile(filePath, 'utf8').then(source => {
+            return readFile(item.path, 'utf8').then(source => {
               if (type === 'string') {
                 return source.indexOf(this.options[option]) !== -1;
               }
