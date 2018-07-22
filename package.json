@@ -1,6 +1,6 @@
 {
   "name": "broccoli-content-funnel",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Funnel based on file contents",
   "main": "index.js",
   "scripts": {
