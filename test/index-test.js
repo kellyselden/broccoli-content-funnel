@@ -3,18 +3,14 @@
 const { createBuilder, createTempDir } = require('broccoli-test-helper');
 const co = require('co');
 const { expect } = require('chai');
-const sinon = require('sinon');
 const ContentFunnel = require('..');
 const fs = require('fs');
 
 describe('ContentFunnel', function() {
   let input, output;
-  let callback;
 
   beforeEach(co.wrap(function * () {
     input = yield createTempDir();
-
-    callback = sinon.spy();
   }));
 
   afterEach(co.wrap(function * () {
@@ -23,9 +19,7 @@ describe('ContentFunnel', function() {
   }));
 
   function funnel(options) {
-    let subject = new ContentFunnel(input.path(), Object.assign({
-      callback
-    }, options));
+    let subject = new ContentFunnel(input.path(), options);
 
     output = createBuilder(subject);
   }
@@ -105,44 +99,6 @@ describe('ContentFunnel', function() {
           'amd.js': `unlink`
         });
       }));
-
-      describe('callback', function() {
-        it('calls once when found multiple', co.wrap(function * () {
-          funnel({
-            include: 'define('
-          });
-
-          input.write({
-            'amd.js': `define(function() {})`,
-            'amd2.js': `define(function() {})`
-          });
-
-          yield output.build();
-
-          expect(output.read()).to.deep.equal({
-            'amd.js': `define(function() {})`,
-            'amd2.js': `define(function() {})`
-          });
-
-          expect(callback.calledOnce).to.be.ok;
-        }));
-
-        it('doesn\'t call when not found', co.wrap(function * () {
-          funnel({
-            include: 'define('
-          });
-
-          input.write({
-            'es6.js': `export default 1`
-          });
-
-          yield output.build();
-
-          expect(output.read()).to.deep.equal({});
-
-          expect(callback.called).to.not.be.ok;
-        }));
-      });
     });
 
     describe('regex', function() {
@@ -294,43 +250,6 @@ describe('ContentFunnel', function() {
           'amd.js': `unlink`
         });
       }));
-
-      describe('callback', function() {
-        it('calls once when found multiple', co.wrap(function * () {
-          funnel({
-            exclude: 'export '
-          });
-
-          input.write({
-            'es6.js': `export default 1`,
-            'es62.js': `export default 1`
-          });
-
-          yield output.build();
-
-          expect(output.read()).to.deep.equal({});
-
-          expect(callback.calledOnce).to.be.ok;
-        }));
-
-        it('doesn\'t call when not found', co.wrap(function * () {
-          funnel({
-            exclude: 'export '
-          });
-
-          input.write({
-            'amd.js': `define(function() {})`
-          });
-
-          yield output.build();
-
-          expect(output.read()).to.deep.equal({
-            'amd.js': `define(function() {})`
-          });
-
-          expect(callback.called).to.not.be.ok;
-        }));
-      });
     });
 
     describe('regex', function() {

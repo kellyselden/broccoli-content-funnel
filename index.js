@@ -25,7 +25,6 @@ class ContentFunnel extends Funnel {
 
   build() {
     let [inputPath] = this.inputPaths;
-    let { callback } = this.options;
 
     let option = this.options.include ? 'include' : 'exclude';
     let type = typeof this.options[option];
@@ -67,9 +66,6 @@ class ContentFunnel extends Funnel {
           resolve(Promise.all(promises));
         });
     }).then(() => {
-      if (callback && this[option].length) {
-        callback();
-      }
       super.build();
     });
   }
