@@ -5,8 +5,6 @@ const klaw = require('klaw');
 const denodeify = require('denodeify');
 const fs = require('fs');
 const readFile = denodeify(fs.readFile);
-const realpath = denodeify(fs.realpath);
-const stat = denodeify(fs.stat);
 
 class ContentFunnel extends Funnel {
   constructor(inputNode, options = {}) {
@@ -35,18 +33,10 @@ class ContentFunnel extends Funnel {
       let promises = [];
       klaw(inputPath)
         .on('data', item => {
+          if (item.stats.isDirectory()) {
+            return;
+          }
           promises.push(Promise.resolve().then(() => {
-            if (item.stats.isSymbolicLink()) {
-              return Promise.all([
-                realpath(item.path),
-                stat(item.path)
-              ]).then(([path, stats]) => ({ path, stats }));
-            }
-            return item;
-          }).then(item => {
-            if (item.stats.isDirectory()) {
-              return;
-            }
             if (type === 'function') {
               return this.options[option](item.path);
             }

@@ -26,7 +26,7 @@
   "dependencies": {
     "broccoli-funnel": "^2.0.1",
     "denodeify": "^1.2.1",
-    "klaw": "^2.1.1"
+    "klaw": "^3.0.0"
   },
   "devDependencies": {
     "broccoli-test-helper": "^1.2.0",
